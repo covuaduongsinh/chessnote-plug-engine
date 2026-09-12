@@ -1,0 +1,39 @@
+name: chess-engine
+functions:
+  chessEngineEval:
+    path: ./arasan_engine.ts:evalPosition
+    syscall:
+      name: chess.engineEval
+      description: >-
+        Real UCI analysis of a FEN position using Arasan (NNUE, WebAssembly).
+        Throws if the optional "Chess Engine" Library isn't installed in this Space.
+      parameters:
+        - { name: fen, type: string }
+        - { name: depth, type: number }
+      returns:
+        - { type: object }
+  chessReviewGame:
+    path: ./game_reviewer.ts:reviewGame
+    syscall:
+      name: chess.reviewGame
+      description: >-
+        Full real-engine (Arasan) review of a PGN game: evaluates every position
+        with the real engine and classifies each move by centipawn loss. Slow
+        (roughly N+1 engine searches for N plies) — an on-demand batch job, not
+        something to call at render time.
+      parameters:
+        - { name: pgn, type: string }
+        - { name: depth, type: number }
+      returns:
+        - { type: object }
+  chessEngineBuildMoveList:
+    path: ./game_reviewer.ts:buildMoveList
+    syscall:
+      name: chess.engine.buildMoveList
+      description: >-
+        Parses a PGN into its move list (SAN, FEN before/after each ply) using
+        chess.js only — no engine involved, cheap enough to call at render time.
+      parameters:
+        - { name: pgn, type: string }
+      returns:
+        - { type: array }
