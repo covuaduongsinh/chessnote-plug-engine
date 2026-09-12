@@ -1,24 +1,55 @@
 # chessnote-plug-engine
 
-ChessNote's chess engine plug: the Arasan chess engine compiled to WebAssembly
-(NNUE), UCI protocol parsing, and game-review/move-classification logic
-(centipawn loss, accuracy, brilliant/mistake/blunder classification).
+A standalone SilverBullet plug: the [Arasan](https://www.arasanchess.org/)
+chess engine compiled to WebAssembly (NNUE), UCI protocol parsing, and
+game-review/move-classification logic (centipawn loss, accuracy,
+brilliant/mistake/blunder classification) — extracted from
+[ChessNote](https://github.com/covuaduongsinh/chessnote) (a chess-focused
+SilverBullet fork). Runs entirely inside its own plug Worker sandbox.
 
-## ⚠️ Not independently installable
+## Install
 
-This is a **mirrored source snapshot** of `plugs/chess-engine/` from the main
-[chessnote](https://github.com/covuaduongsinh/chessnote) monorepo, kept as a
-separate repository for clearer version tracking of this one feature area.
+In SilverBullet, run the **"Library: Install"** command and paste this URL:
 
-It is **not** a standalone, installable SilverBullet plug:
+```
+https://raw.githubusercontent.com/covuaduongsinh/chessnote-plug-engine/main/chess-engine-library.md
+```
 
-- It exposes its functions (`chess.engineEval`, `chess.reviewGame`,
-  `chess.engine.buildMoveList`) as syscalls consumed by ChessNote's other
-  chess-* plugs (chess-core, chess-ai, chess-pdf-export) — it only makes sense
-  running alongside them inside the ChessNote client build.
-- The actual build (compiling this into a `.plug.js`, registering it in
-  `plugs/builtin_plugs.ts`) happens in the main chessnote repo, not here.
+This pulls in `chess-engine.plug.js` **and the two engine binary files**
+(`arasan.wasm`, ~900KB, `arasanv8-20260906.nnue`, ~25MB — so this install
+step takes a bit longer than the other chessnote-plug-* repos) at
+`Library/Chess/arasan.wasm` / `Library/Chess/arasanv8-20260906.nnue` in your
+Space, since the plug reads them from those exact hardcoded paths. After
+installing, run **"Plugs: Reload"** if it doesn't load automatically.
 
-To use or modify this code, work in the main
-[chessnote](https://github.com/covuaduongsinh/chessnote) repo instead — this
-repo exists for reference and history, not standalone development.
+This plug has no dependency on any other chessnote-plug-* — it's a good
+first install. It's a dependency *for* `chessnote-plug-core`,
+`chessnote-plug-ai`, and `chessnote-plug-pdf-export` (see their own READMEs
+for the full install order).
+
+## What it provides
+
+- `chess.engineEval(fen, depth?)` — position evaluation.
+- `chess.reviewGame(pgn, depth?)` — full-game review (accuracy, move
+  classification, advantage graph).
+- `chess.engine.buildMoveList(pgn)` — cheap chess.js-only move list (no
+  engine call, no binary files needed), used for PGN navigation.
+
+`chess.engineEval`/`chess.reviewGame` throw a clear `EngineNotInstalledError`
+(surfaced as `isEngineNotInstalledError(e)` for callers to check) if the two
+binary files above are missing.
+
+## Development
+
+Source lives here **and** as `plugs/chess-engine/` in the main
+[chessnote](https://github.com/covuaduongsinh/chessnote) monorepo, which is
+where `chess-engine.plug.yaml` actually gets compiled during ChessNote's own
+build (`npm run build:plugs`). This repo's `chess-engine.plug.js` is a
+manually-published snapshot — after changing the source here (or there),
+rebuild and re-copy the compiled `.plug.js` to keep this repo's install URL
+up to date.
+
+To compile it yourself from this repo directly, you'll need SilverBullet's
+plug-compile tooling (see [Plug
+Development](https://silverbullet.md/Plugs/Development) docs) pointed at
+`chess-engine.plug.yaml`.
